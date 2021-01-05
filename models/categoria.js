@@ -6,8 +6,8 @@ let Schema = mongoose.Schema;
 let categoriaSchema = new Schema({
     nombre: {
         type: String,
-        required: [true, 'Ya existe esta categoria!'],
-        unique: true
+        required: [true, 'el nombre de la categoria es necesaria'],
+        unique: [true, 'ya existe esta categoria intente otro nombre']
     },
     descripcion: {
         type: String,
@@ -18,8 +18,9 @@ let categoriaSchema = new Schema({
         required: false,
         default: true
     },
-    idCreador: {
-        type: String,
+    usuarios: {
+        type: Schema.Types.ObjectId,
+        ref: 'usuario',
         required: true,
 
     }

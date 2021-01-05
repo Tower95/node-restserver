@@ -11,37 +11,32 @@ const Categoria = require('../models/categoria');
 
 app.get('/categoria', verificarToken, (req, res) => {
     //Muestra todas las categorias.
-    Categoria.find((err, categoriaDB) => {
-        if (err) {
-            return res.status(400).json({
-                ok: false,
-                err: { message: 'No hay niguna categoria' }
-            });
-        }
-        return res.status(200).json({
-            categoria: categoriaDB
-        })
-    });
+    Categoria.find({})
+        .populate('usuarios', 'nombre email')
+        .sort('nombre')
+        .exec((err, categoriaDB) => {
+            if (err) {
+                return res.status(400).json({
+                    ok: false,
+                    err
+                });
+            }
+            res.status(200).json({
+                ok: true,
+                categoria: categoriaDB
+            })
+        });
 });
 
-app.get('/categoria/:id', verificarToken, (req, res) => {
+app.get('/categoria/:id', verificarToken, async(req, res) => {
     //Muestra una de las categorias por id.
     let id = req.params.id;
     console.log(id);
-    Categoria.findById(id, (err, categoriaDB) => {
-        if (err) {
-            return res.status(400).json({
-                ok: false,
-                err
-            })
-        }
-        return res.status(200).json({
-            ok: true,
-            categoria: categoriaDB
-        });
-
-    });
-
+    let cat = await Categoria.findById(id);
+    res.status(200).json({
+        ok: true,
+        categoria: cat
+    })
 
 });
 
@@ -58,16 +53,22 @@ app.post('/categoria', [verificarToken, verificarAdmin_Role], (req, res) => {
         nombre: body.nombre,
         descripcion: body.descripcion,
         disponivilidad: body.disponivilidad,
-        idCreador: req.usuario._id
+        usuarios: req.usuario._id
     });
     categoriaNueva.save((err, categoriaDB) => {
         if (err) {
-            return res.status(400).json({
+            return res.status(500).json({
                 ok: false,
                 erro: { message: 'No se pudo crear la categoria', err }
             });
         }
-        return res.status(201).json({
+        if (!categoriaDB) {
+            return res.status(400).json({
+                ok: false,
+                err
+            });
+        }
+        res.status(201).json({
             ok: true,
             categoria: categoriaDB
         });
@@ -78,15 +79,22 @@ app.put('/categoria/:id', [verificarToken, verificarAdmin_Role], (req, res) => {
 
     let id = req.params.id;
 
+
     let body = _.pick(req.body, ['descripcion', 'disponivilidad', 'nombre'])
-    Categoria.findByIdAndUpdate(id, body, { new: true }, (err, categoriaDB) => {
+    let categorioa = {
+        descripcion: body.descripcion,
+        disponivilidad: body.disponivilidad,
+        nombre: body.nombre,
+        idCreador: req.usuario._id
+    };
+    Categoria.findByIdAndUpdate(id, categorioa, { new: true, runValidators: true, context: 'query' }, (err, categoriaDB) => {
         if (err) {
             return res.status(400).json({
                 ok: false,
                 err
             })
         }
-        return res.status(200).json({
+        res.status(200).json({
             ok: true,
             categoria: categoriaDB
         });
@@ -104,7 +112,7 @@ app.delete('/categoria/:id', [verificarToken, verificarAdmin_Role], (req, res) =
                 err
             })
         }
-        return res.status(200).json({
+        res.status(200).json({
             ok: true,
             categoria: categoriaDB
         });
