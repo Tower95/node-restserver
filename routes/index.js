@@ -4,5 +4,6 @@ app.use(require('../routes/usuario'));
 app.use(require('../routes/login'));
 app.use(require('../routes/categoria'));
 app.use(require('../routes/producto'));
+app.use(require('../routes/upload'));
 
 module.exports = app;

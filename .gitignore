@@ -1,1 +1,5 @@
 node_modules/
+MONGO/
+Dockerfile
+docker-compose.yml
+uploads/
